@@ -1,6 +1,7 @@
+local BlindHubsUiLibrary = (function()
 --[[
-    BlindHubsUiLibrary: A Foundational Custom UI Library
-    Version 20.0.54: Final Version (Packaged & Complete with Safeguards)
+    BlindHubsUiLibrary: A Foundational Custom UI Library
+    Version 20.0.54: Final Version (Packaged & Complete with Safeguards)
 ]]
 
 -- ===================================================================
@@ -564,7 +565,7 @@ function BlindHubsUiLibrary:AddDropdown(options)
 
 	local arrow = create("TextLabel", {
 		Name = "Arrow", Size = UDim2.fromOffset(20, 20), Position = UDim2.new(1, -15, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5),
-		BackgroundTransparency = 1, Font = Enum.Font.SourceSansBold, Text = "â¼",
+		BackgroundTransparency = 1, Font = Enum.Font.SourceSansBold, Text = "▼",
 		TextColor3 = Color3.fromRGB(225, 225, 225), TextSize = 12, Parent = dropdownButton
 	})
 
@@ -585,7 +586,7 @@ function BlindHubsUiLibrary:AddDropdown(options)
 	local function closeDropdown()
 		isOpen = false
 		optionsList.Visible = false
-		arrow.Text = "â¼"
+		arrow.Text = "▼"
 		if positionUpdaterConnection then
 			positionUpdaterConnection:Disconnect()
 			positionUpdaterConnection = nil
@@ -635,7 +636,7 @@ function BlindHubsUiLibrary:AddDropdown(options)
 			updatePosition()
 			
 			optionsList.Visible = true
-			arrow.Text = "â²"
+			arrow.Text = "▲"
 
 			positionUpdaterConnection = RunService.RenderStepped:Connect(updatePosition)
 		else
@@ -703,7 +704,7 @@ function BlindHubsUiLibrary:AddToggle(text)
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Font = Enum.Font.SourceSansBold,
-		Text = "â",
+		Text = "✔",
 		TextColor3 = Color3.fromRGB(0, 0, 0),
 		TextSize = 12,
 		BackgroundTransparency = 1,
@@ -1315,7 +1316,7 @@ function BlindHubsUiLibrary:LoadSettings()
 	end
 	
 	if not CONFIG_FOLDER_VERIFIED then
-		if isfolder("workspace") then
+		if pcall(isfolder, "workspace") then
 			CONFIG_FOLDER_VERIFIED = true
 		else
 			BlindHubsUiLibrary.CreateNotification("Warning", "'workspace' folder not found. Settings will not be saved or loaded.", 6)
@@ -1770,7 +1771,15 @@ end
 
 function BlindHubsUiLibrary.CreateDefaultWindow()
 	local baseTitle = "BlindHubOfficial:"
-	local gameName = "Game Name Here"
+	
+	-- MODIFICATION: Safely get the game name
+	local success, gameName = pcall(function() 
+		return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name 
+	end)
+	if not success then 
+		gameName = "Game Name Here" 
+	end
+	
 	local fullTitle = baseTitle .. " " .. gameName
 
 	local Window = BlindHubsUiLibrary.CreateWindow({
@@ -1868,3 +1877,57 @@ function BlindHubsUiLibrary.Init()
 end
 
 return BlindHubsUiLibrary
+end)() -- Immediately calls the function wrapper, loading the library into the variable
+
+-- ===================================================================
+-- Executable Example
+-- ===================================================================
+-- This code will now run, as the library is loaded into the 'BlindHubsUiLibrary' variable.
+
+-- 1. Initialize the library's required components (like the notification system)
+BlindHubsUiLibrary.Init()
+
+-- 2. Create the default window, which includes all the example tabs and elements
+local MyWindow = BlindHubsUiLibrary.CreateDefaultWindow()
+
+-- 3. You can now access the window and its elements
+-- For example, to connect to the "God Mode" toggle:
+local playerTab = MyWindow.pages[MyWindow.TabContainer:FindFirstChild("Player")]
+if playerTab then
+    local godModeToggle = playerTab.page:FindFirstChild("God Mode_Toggle")
+    if godModeToggle then
+        godModeToggle.State.Changed:Connect(function(newValue)
+            print("God Mode was changed to:", newValue)
+            -- You would add your game-specific code here
+            if newValue then
+                print("God Mode Enabled!")
+            else
+                print("God Mode Disabled!")
+            end
+        end)
+    else
+        print("Could not find God Mode toggle")
+    end
+else
+    print("Could not find Player tab")
+end
+
+-- You can also connect to other elements, like the Walkspeed slider
+local cheatsTab = MyWindow.pages[MyWindow.TabContainer:FindFirstChild("Cheats")]
+if cheatsTab then
+    local walkspeedSlider = cheatsTab.page:FindFirstChild("Walkspeed_Slider")
+    if walkspeedSlider then
+        walkspeedSlider.State.Changed:Connect(function(newValue)
+            print("Walkspeed changed to:", newValue)
+            -- Example: Change player walkspeed
+            -- local player = game:GetService("Players").LocalPlayer
+            -- if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+            --     player.Character.Humanoid.WalkSpeed = newValue
+            -- end
+        end)
+    else
+        print("Could not find Walkspeed slider")
+    end
+else
+    print("Could not find Cheats tab")
+end
